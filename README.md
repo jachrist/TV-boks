@@ -1,7 +1,9 @@
 # TV-styringsboks for synshemmede/eldre
 
 > Se [`docs/arkitektur-diskusjonsgrunnlag.md`](docs/arkitektur-diskusjonsgrunnlag.md)
-> for et diskusjonsgrunnlag om arkitektur og løsningsmodell.
+> for et diskusjonsgrunnlag om arkitektur og løsningsmodell, og
+> [`docs/google-tv-styring.md`](docs/google-tv-styring.md) for styring av
+> Google TV-enheten.
 
 ## Prosjektmål
 

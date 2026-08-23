@@ -8,6 +8,14 @@ Utgangspunktet er prosjektforslaget i `README.md`. Der hvor jeg mener forslaget
 tar en forutsetning som bør utfordres, sier jeg det eksplisitt under
 **Innvending**.
 
+> **Status:** valget har falt på **modell C med en Google TV-enhet** som
+> innholdsleverandør. Se [google-tv-styring.md](google-tv-styring.md) for
+> styringsflaten i detalj. Det valget forenkler flere av seksjonene under
+> vesentlig — hvis alle kanalene delegeres, blir Pi-en en hodeløs
+> nettverkskontroller, og §2 (DRM og tokens), §4 (mpv/Kodi), §7 (CEC fra
+> Pi-en) og kiosk-modus faller i praksis bort. Seksjonene er beholdt fordi
+> avveiingene de beskriver fortsatt er de som begrunner valget.
+
 ---
 
 ## 0. De seks beslutningene som blokkerer alt annet
