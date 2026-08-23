@@ -179,6 +179,52 @@ Skal du feilsøke senere: bytt boksen midlertidig til Wi-Fi, par ADB på nytt,
 gjør det som skal gjøres, sett den tilbake på kabel. Tungvint, men det er en
 sjelden operasjon — og prisen for at den vanlige driften er robust.
 
+### Hva med Homey?
+
+Athom har en **offisiell Android TV-app for Homey** (`com.android.tv`, med
+kildekode på GitHub). Den støtter både tastetrykk og å starte apper via deep
+link, altså det vi trenger. To forbehold: den **krever Homey Pro**, siden den
+må ha lokal forbindelse til boksen — en Homey Bridge holder ikke — og Athom
+skriver selv at enkelte funksjoner kan være begrenset eller ikke virke, på
+grunn av begrensninger i selve Android TV-protokollen.
+
+**Bør vi styre boksen gjennom Homey? Nei — ikke styringsveien.**
+
+Homey snakker den samme Remote v2-protokollen som vi ville snakket direkte.
+Å gå via Homey legger derfor ikke til noen evne; det legger til et ledd:
+
+- **Ett ekstra ledd i responstiden.** Knapp → Pi → Homey → boks, i stedet for
+  knapp → Pi → boks. For volumknappen, der målet er under 100 ms (§7), er det
+  et dårlig bytte.
+- **Ett ekstra feilpunkt.** Er Homey nede eller midt i en oppdatering, virker
+  ikke TV-en. Vi har allerede akkurat nok ting som kan ryke.
+- **Mindre kontroll over feilhåndtering.** Vi trenger å vite *hvorfor* noe
+  feilet for å kunne si det riktige til brukeren (§5). Gjennom en
+  Flow-abstraksjon blir det tynnere.
+
+Vi bruker `androidtvremote2` direkte fra Python i stedet. Det er også
+vedlikeholdt, og det er én avhengighet i stedet for en enhet til i kjeden.
+
+**Men Homey har en god rolle — bare en annen enn styring.**
+
+Har du en Homey Pro fra før, er den et nesten ferdig svar på varslingskravet
+fra §2 i hovednotatet: at pårørende skal få beskjed *før* brukeren treffer et
+problem. Pi-en kaller en webhook, Homey sender pushvarselet. Fordelen er at
+denne veien er **ufarlig å la være avhengig av Homey**: ryker den, mister vi et
+varsel, men brukeren merker ingenting. Det er motsatt av styringsveien, der et
+ekstra ledd rammer henne direkte.
+
+En bonus på kjøpet: Homey-appen på telefonen blir en fjernkontroll de pårørende
+kan bruke når de hjelper til over telefon, uten at det gir brukeren noe nytt å
+forholde seg til.
+
+**Uansett verdt å låne fra Homey-miljøet:** både Homeys dokumentasjon og Home
+Assistant-miljøet peker til en felles, dugnadsbasert oversikt over deep links
+for Android TV-apper. Den er verdt å slå opp i før spiken (§4) — kanskje noen
+allerede har funnet adressene vi trenger. Merk også teknikken
+`market://launch?id=<pakkenavn>`, som starter en app på pakkenavn alene, og som
+er et brukbart minimum for tjenester uten en ordentlig innholds-deep-link.
+
 ---
 
 ## 4. Deep links er det som avgjør prosjektet
@@ -455,6 +501,9 @@ enn etter at boksen er bygget.
    Remote v2 i drift, ADB kun til oppsett og feilsøking (§3).
 4. **Hvor mye tilstand gir Remote v2?** Spørsmålet som erstatter det forrige,
    se §5. Det avgjør hva boksen kan si til brukeren uten å risikere å ta feil.
-5. **Hva skjer når nettet er nede?** Nå som alt innhold er nettavhengig, er
+5. **Har du Homey Pro, eller Bridge?** Android TV-appen krever Pro. Svaret
+   avgjør ikke styringsveien (se §3 — den går utenom Homey uansett), men det
+   avgjør om Homey kan brukes til varsling av pårørende.
+6. **Hva skjer når nettet er nede?** Nå som alt innhold er nettavhengig, er
    dette en tilstand som fortjener en egen talemelding og ikke bare en
    generisk feil.
