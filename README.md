@@ -1,5 +1,8 @@
 # TV-styringsboks for synshemmede/eldre
 
+> Se [`docs/arkitektur-diskusjonsgrunnlag.md`](docs/arkitektur-diskusjonsgrunnlag.md)
+> for et diskusjonsgrunnlag om arkitektur og løsningsmodell.
+
 ## Prosjektmål
 
 Bygge en fysisk boks med store, taktile knapper som lar en synshemmet eller
