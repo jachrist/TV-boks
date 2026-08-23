@@ -7,8 +7,8 @@ valget falt på en Google TV-enhet som innholdsleverandør.
 **Merk om sikkerhet i påstandene:** styringskanalene under er godt etablerte og
 brukes blant annet av Home Assistant. Men *hvilke pakkenavn og deep links som
 faktisk finnes for NRK og TV 2*, og hvordan den konkrete enheten oppfører seg,
-er noe som må måles på maskinvaren — ikke noe jeg vil påstå på forhånd. §3 og
-§9 er derfor skrevet som oppskrifter for å finne ut av det, ikke som fasit.
+er noe som må måles på maskinvaren — ikke noe jeg vil påstå på forhånd. §4 og
+§10 er derfor skrevet som oppskrifter for å finne ut av det, ikke som fasit.
 
 ---
 
@@ -19,10 +19,10 @@ er noe som må måles på maskinvaren — ikke noe jeg vil påstå på forhånd.
 | Sende tastetrykk (D-pad, play/pause, volum, hjem, tilbake) | ✅ Trivielt, flere veier |
 | Vekke og dvale-sette boksen | ✅ |
 | Starte en bestemt app | ✅ |
-| **Gå rett til en bestemt kanal i appen** | ⚠️ **Avhenger av deep links — dette er hele spørsmålet, se §3** |
-| Lese hva som faktisk spiller nå | ✅ Og det er viktigere enn det høres ut, se §4 |
-| Styre volum | ✅ Flere veier, men pass på responstid, se §6 |
-| Slå på TV og bytte inngang | ✅ Ofte gjør boksen det selv via CEC, se §5 |
+| **Gå rett til en bestemt kanal i appen** | ⚠️ **Avhenger av deep links — dette er hele spørsmålet, se §4** |
+| Lese hva som faktisk spiller nå | ✅ Og det er viktigere enn det høres ut, se §5 |
+| Styre volum | ✅ Flere veier, men pass på responstid, se §7 |
+| Slå på TV og bytte inngang | ✅ Ofte gjør boksen det selv via CEC, se §6 |
 
 Det som *ikke* går, og som det er verdt å slå fast med en gang: vi kan ikke
 skript-styre innsiden av en app på noen robust måte. Alt vi gjør må uttrykkes
@@ -31,7 +31,76 @@ første pålitelig over tid.
 
 ---
 
-## 2. De fire styringskanalene
+## 2. Enhetsvalg og oppsett av boksen
+
+**Chromecast med Google TV er utgått.** Google avviklet både 4K- og HD-varianten
+— de ble fjernet fra Google Store i februar 2025 — og erstattet dem med **Google
+TV Streamer (4K)**, en set-top-boks i stedet for en dongle, til omtrent dobbel
+pris. Eksisterende Chromecast-enheter får fortsatt oppdateringer, men ikke
+nødvendigvis nye funksjoner.
+
+| | Chromecast med Google TV (4K) | Google TV Streamer (4K) |
+|---|---|---|
+| Lagring | 8 GB | 32 GB |
+| Minne | 2 GB | 4 GB |
+| Nettverk | Kun Wi-Fi (ethernet krevde ekstra adapter) | **Gigabit ethernet** + Wi-Fi |
+| Status | Utgått | Gjeldende |
+
+For dette prosjektet mener jeg valget er enkelt, og det handler ikke om ytelse:
+
+**Lagringen.** 8 GB er den kjente svakheten ved Chromecast med Google TV. Med
+noen apper installert og et par års oppdateringer fylles den, og resultatet er
+at enheten blir treg og oppfører seg uforutsigbart. Det er nøyaktig den
+feilmodusen vi ikke har råd til: den kommer gradvis, den gir ingen tydelig
+feilmelding, og brukeren kan ikke beskrive den for noen.
+
+**Ethernet-porten.** Nå som *alt* innhold ligger bak nettverket, er en
+Wi-Fi-dropout det samme som at TV-en slutter å virke. Kabel til både boksen og
+Pi-en fjerner hele den klassen av feil, og er antakelig tiltaket med best effekt
+per krone i hele prosjektet.
+
+Å kjøpe en brukt Chromecast fordi den er billigere, betyr å sette en utgått
+enhet med for lite lagring til å stå og virke uten tilsyn i mange år. Det vil
+jeg fraråde.
+
+### Oppsettsjekkliste
+
+Hvert punkt her fjerner en mulig felle for blind automatikk (§8). Verdt å gjøre
+én gang, grundig, og skrive ned mens det gjøres:
+
+- **Egen Google-konto for boksen.** Ikke en pårørendes personlige. Ingen
+  private data på en enhet i et annet hjem, og en ren startskjerm uten
+  anbefalinger vi ikke styrer.
+- **Kablet nettverk**, og fast IP-reservasjon på ruteren for både boks og Pi.
+- **Slå av skjermsparer og ambient-modus**, eller sett dem så langt ut som
+  mulig.
+- **Slå av automatisk avspilling av forhåndsvisninger** på startskjermen.
+- **Avinstaller apper vi ikke bruker.** Hver app er en potensiell
+  oppdateringsdialog i veien.
+- **Sett strømsparing slik at nettverket holdes i live i dvale** — vi må kunne
+  vekke boksen over nettet.
+- **Bekreft at HDMI-CEC er på** (§6).
+- **Logg inn i alle tjenestene**, og noter hvor tokenene kan tilbakekalles.
+- **Par fjernkontrollen og legg den i en skuff.** Den trengs ved vedlikehold —
+  men brukeren skal aldri trenge den.
+
+### Konsekvens for Pi-en
+
+Nå som Pi-en verken har HDMI, nettleser, avspilling eller DRM å forholde seg
+til, er en Pi 4 eller 5 kraftig overdimensjonert. En Pi 3 eller Pi Zero 2 W
+holder fint — merk bare at Zero 2 W har få USB-porter, og at både
+mikrokontrolleren og lydkortet skal ha plass. Har du allerede en Pi liggende,
+bruk den; ikke kjøp en Pi 5 til denne jobben.
+
+Det logiske neste spørsmålet er om Pi-en trengs i det hele tatt — en ESP32 har
+både nettverk og nok kraft til å sende kommandoer og spille av lydfiler.
+Teknisk er svaret ja. Jeg vil likevel beholde Pi-en, og grunnen er §10 i
+hovednotatet: fjernvedlikehold, logging og oppdatering. På en boks som skal stå
+hos noen i årevis er det verdt mer enn de kronene og wattene en ESP32 sparer.
+
+---
+
+## 3. De fire styringskanalene
 
 | | Krever oppsett | Taster | Start app / deep-link | Lese tilstand | Responstid | Robusthet |
 |---|---|---|---|---|---|---|
@@ -61,7 +130,7 @@ ligger hos sender-appen.
 
 ADB er det klart beste verktøyet for å *utforske* enheten — `dumpsys` og
 `logcat` er hvordan vi i det hele tatt finner ut hvilke deep links som finnes
-(§3). Men å la utviklermodus stå på i årevis på en boks hjemme hos noen er både
+(§4). Men å la utviklermodus stå på i årevis på en boks hjemme hos noen er både
 en liten angrepsflate og et skjørt punkt: den kan bli slått av av en oppdatering
 eller et fabrikkreset, og da må noen fysisk inn og slå den på igjen.
 
@@ -71,7 +140,7 @@ beslutning å ta etter at vi har målt — ikke nå.
 
 ---
 
-## 3. Deep links er det som avgjør prosjektet
+## 4. Deep links er det som avgjør prosjektet
 
 Alt annet i dette notatet er enkelt. Dette er ikke.
 
@@ -130,7 +199,7 @@ Da står valget mellom tre dårlige alternativer, og det er verdt å ta stilling
 til det bevisst i stedet for å skli inn i det første:
 
 1. **Tastesekvens med verifisering.** Ikke blind — vi leser tilstanden etterpå
-   (§4) og sier ifra hvis vi havnet feil. Bedre enn en ren makro, men fortsatt
+   (§5) og sier ifra hvis vi havnet feil. Bedre enn en ren makro, men fortsatt
    noe som vil brekke.
 2. **Bare start appen**, og la den lande der den lander — typisk «fortsett å
    se» eller forsiden. Ærligere: knappen betyr da «TV 2», ikke «TV 2 direkte».
@@ -143,7 +212,7 @@ noen ringer og sier at boksen har «begynt å gjøre noe rart».
 
 ---
 
-## 4. Tilstandslesing — undervurdert, og nødvendig
+## 5. Tilstandslesing — undervurdert, og nødvendig
 
 Vi kan spørre boksen hva som foregår:
 
@@ -155,7 +224,7 @@ adb exec-out screencap -p > skjerm.png                          # for fjernfeils
 ```
 
 Grunnen til at dette betyr mer her enn i et vanlig prosjekt: **lydmodellen vår
-(§6 i hovednotatet) lover brukeren at boksen sier hva som skjer.** Uten
+(§7 i hovednotatet) lover brukeren at boksen sier hva som skjer.** Uten
 tilstandslesing er «NRK1» bare noe vi *håper* er sant fordi vi sendte en
 kommando. Med tilstandslesing er det noe vi vet.
 
@@ -167,12 +236,12 @@ Så: **si aldri kanalnavnet før tilstanden er bekreftet.** Sekvensen blir klikk
 («hørte deg») → lastetone → bekreftet kanalnavn, eller feilmelding. Ikke
 kanalnavn med én gang og håp.
 
-`screencap` er også verdt å merke seg for §10 i hovednotatet: en pårørende kan
+`screencap` er også verdt å merke seg for §11 i hovednotatet: en pårørende kan
 se hva som faktisk står på skjermen, uten å være i huset.
 
 ---
 
-## 5. Strøm og oppstart
+## 6. Strøm og oppstart
 
 Her er en hyggelig overraskelse: **Google TV-boksen gjør mesteparten av
 CEC-jobben selv.** Når den vekkes, slår den typisk på TV-en og bytter til sin
@@ -182,7 +251,7 @@ egen HDMI-inngang. Det betyr at «på»-knappen kan bli:
 vekk boksen  →  TV-en følger etter av seg selv
 ```
 
-CEC-risikoen fra §7 i hovednotatet blir dermed mindre, fordi vi flytter
+CEC-risikoen fra §8 i hovednotatet blir dermed mindre, fordi vi flytter
 CEC-ansvaret fra vår egen implementasjon over på en enhet der det er
 produsenttestet. Men merk at det bare gjelder når en delegert kilde er aktiv —
 og at det fortsatt må verifiseres på den faktiske TV-en. Det er den samme
@@ -194,7 +263,7 @@ og mørkt, ikke at én av to bokser går i dvale.
 
 ---
 
-## 6. Volum og responstid
+## 7. Volum og responstid
 
 Dette er stedet hvor en naiv implementasjon kommer til å føles dårlig.
 
@@ -209,7 +278,7 @@ To ting løser det, og begge bør inn fra starten:
 1. **Vedvarende forbindelse.** Remote v2 eller Cast holder forbindelsen åpen.
    Ingen prosessoppstart per hakk.
 2. **Slå sammen hakk.** Mikrokontrolleren sender allerede `ENC:+3` og ikke tre
-   separate meldinger (§5 i hovednotatet). Det gir oss én kommando i stedet
+   separate meldinger (§6 i hovednotatet). Det gir oss én kommando i stedet
    for tre.
 
 Sett et konkret mål og mål mot det: **under 100 ms fra vri til hørbar endring.**
@@ -217,7 +286,7 @@ Er vi over, er valget av styringskanal feil, ikke koden.
 
 ---
 
-## 7. Feilmodus som er særegne for denne modellen
+## 8. Feilmodus som er særegne for denne modellen
 
 Ting som vil skje, og som må håndteres i stedet for oppdages:
 
@@ -225,7 +294,7 @@ Ting som vil skje, og som må håndteres i stedet for oppdages:
   dette; tastesekvenser gjør det ikke.
 - **Mellomskjermer.** «Fortsett å se», vilkårsendringer, kampanjeskjermer,
   «logg inn på nytt». De dukker opp uten forvarsel og bryter enhver antakelse
-  om hvor vi er. Motgiften er tilstandslesing (§4) pluss en fast
+  om hvor vi er. Motgiften er tilstandslesing (§5) pluss en fast
   gjenopprettingsrutine: `KEYCODE_HOME`, vent, send deep link på nytt.
 - **Skjermsparer og dvale.** Send alltid `KEYCODE_WAKEUP` først og verifiser
   `mWakefulness=Awake` før noe annet.
@@ -239,7 +308,7 @@ Ting som vil skje, og som må håndteres i stedet for oppdages:
 
 ---
 
-## 8. Hva valget gjør med resten av arkitekturen
+## 9. Hva valget gjør med resten av arkitekturen
 
 Dette er det jeg tror er den viktigste konsekvensen, og den er god:
 
@@ -249,10 +318,10 @@ HDMI-kilde i det hele tatt.**
 Da faller følgende bort fra hovednotatet:
 
 - Kiosk-modus og oppstart rett i en app (§13, punkt om kiosk)
-- mpv kontra Kodi (§4) — det er ikke lenger noe å velge mellom
-- HDMI-CEC fra Pi-en (§7) — boksen gjør det
-- Widevine-spiken (§2) — spørsmålet forsvinner, det er boksens problem nå
-- Hele token-håndteringen (§2) — appene eier den, og fornyer stille selv
+- mpv kontra Kodi (§5) — det er ikke lenger noe å velge mellom
+- HDMI-CEC fra Pi-en (§8) — boksen gjør det
+- Widevine-spiken (§3) — spørsmålet forsvinner, det er boksens problem nå
+- Hele token-håndteringen (§3) — appene eier den, og fornyer stille selv
 
 Pi-en blir en **hodeløs nettverkskontroller**: knapper inn, lyd ut på egen
 høyttaler, kommandoer ut på nettet. Ingen skjerm, ingen X, ingen nettleser,
@@ -276,21 +345,23 @@ avveiing, og motargumentet er ikke dumt.
 
 ---
 
-## 9. Spike for uke 1
+## 10. Spike for uke 1
 
-Denne erstatter Widevine-spiken fra §2 i hovednotatet. Én dag, og den avgjør
+Denne erstatter Widevine-spiken fra §3 i hovednotatet. Én dag, og den avgjør
 om modellen holder.
 
+0. Kjør oppsettsjekklisten i §2 først. Flere av punktene der påvirker hva
+   spiken måler.
 1. Slå på utviklermodus, `adb connect`, bekreft at forbindelsen overlever en
    omstart av boksen.
-2. Kartlegg pakkenavn for hver tjeneste (§3, teknikk 1).
-3. **For hver av de fire kanalene: finn og verifiser en deep link** (§3,
+2. Kartlegg pakkenavn for hver tjeneste (§4, teknikk 1).
+3. **For hver av de fire kanalene: finn og verifiser en deep link** (§4,
    teknikk 3). Dette er dagens viktigste punkt. Noter hvilke som lyktes.
 4. Mål tid fra kommando til bilde og lyd, per kanal, fra kald start.
-5. Bekreft at tilstandslesing skiller kanalene fra hverandre (§4) — altså at vi
+5. Bekreft at tilstandslesing skiller kanalene fra hverandre (§5) — altså at vi
    *kan* verifisere før vi uttaler oss.
-6. Test at vekking av boksen slår på TV-en og velger riktig inngang (§5).
-7. Mål volumresponstid gjennom minst to kanaler (§6).
+6. Test at vekking av boksen slår på TV-en og velger riktig inngang (§6).
+7. Mål volumresponstid gjennom minst to kanaler (§7).
 
 **Beslutningsregelen:** fungerer punkt 3 for alle fire kanalene, er modellen
 god og resten er alminnelig arbeid. Fungerer den for to av fire, må vi snakke
@@ -299,13 +370,12 @@ enn etter at boksen er bygget.
 
 ---
 
-## 10. Åpne spørsmål
+## 11. Åpne spørsmål
 
-1. **Hvilken Google TV-enhet?** Chromecast med Google TV er billig og gjør
-   jobben. Nvidia Shield har best ADB-støtte og mer kraft. Google TV *innebygd
-   i TV-en* er en annen sak — da finnes det ingen separat HDMI-inngang å bytte
-   til, og §5 må tenkes om.
-2. **Beholder vi en egen NRK-vei på Pi-en?** Se §8 — jeg anbefaler nei.
+1. ~~Hvilken Google TV-enhet?~~ **Avklart:** separat boks, ikke innebygd i
+   TV-en. Se §2 — anbefalingen er Google TV Streamer framfor en utgått
+   Chromecast, i hovedsak på grunn av lagring og ethernet.
+2. **Beholder vi en egen NRK-vei på Pi-en?** Se §9 — jeg anbefaler nei.
 3. **Utviklermodus permanent på, eller Remote v2 i drift?** Kan besvares etter
    spiken, men det er verdt å vite at spørsmålet finnes.
 4. **Hva skjer når nettet er nede?** Nå som alt innhold er nettavhengig, er
