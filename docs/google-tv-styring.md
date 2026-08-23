@@ -104,21 +104,54 @@ hos noen i årevis er det verdt mer enn de kronene og wattene en ESP32 sparer.
 
 | | Krever oppsett | Taster | Start app / deep-link | Lese tilstand | Responstid | Robusthet |
 |---|---|---|---|---|---|---|
-| **ADB over TCP** | Utviklermodus + engangsgodkjenning på skjerm | ✅ | ✅ | ✅ Klart best | ~100–300 ms per kommando | Middels — kan slås av ved oppdatering/reset |
+| **ADB over TCP** | Utviklermodus + paring. **Krever Wi-Fi, ikke ethernet. Overlever ikke omstart** | ✅ | ✅ | ✅ Klart best | ~100–300 ms per kommando | **Dårlig i drift** — se under |
 | **Android TV Remote v2** | Paring med kode på skjerm | ✅ | ✅ (URI) | ⚠️ Begrenset | Lav — vedvarende forbindelse | God — det er protokollen Googles egen fjernkontroll-app bruker |
 | **Google Cast** | Ingenting | ❌ | ⚠️ Cast-app-ID, ikke vilkårlig deep link | ✅ Avspilling + volum | Lav | God — stabilt, offentlig API |
 | **Bluetooth HID** | Paring | ✅ | ❌ | ❌ | Svært lav | God, men helt blind |
 
-**ADB** er `adb connect <ip>:5555` etter at utviklermodus er slått på (trykk
-sju ganger på byggnummeret) og nettverksfeilsøking er aktivert. Første tilkobling
-gir en godkjenningsdialog *på skjermen* — en engangsjobb ved oppsett, men den
-krever at noen ser skjermen. Nøkkelen lagres og overlever omstart.
+### ADB: svakere enn jeg først antok
 
-**Android TV Remote v2** er den reverse-utviklede protokollen bak Googles
-fjernkontroll-app (port 6466/6467), tilgjengelig fra Python via
-`androidtvremote2`. Paringen skjer med en sekssifret kode på skjermen, én gang.
-Fordelen over ADB er at den **ikke krever utviklermodus** og holder en
-vedvarende forbindelse — begge deler betyr noe her.
+Jeg skrev tidligere at ADB-nøkkelen lagres og overlever omstart. Det stemmer
+ikke på Android 13/14, som er det Google TV Streamer kjører, og forskjellen er
+stor nok til at den snur anbefalingen.
+
+Slik ser det faktisk ut:
+
+- **Trådløs feilsøking er skilt ut fra USB-feilsøking** fra Android 13, med en
+  egen paringsflyt: en sekssifret kode på skjermen og en egen paringsport.
+- **Porten randomiseres, og oppsettet overlever ikke omstart.** Android 14
+  strammet inn her. Boksen oppdaterer og starter seg selv om natten — så dette
+  er ikke en teoretisk ulempe, det er noe som vil skje jevnlig.
+- **Trådløs feilsøking lar seg ikke slå på over ethernet.** Bryteren hopper
+  tilbake til av. Den dokumenterte omveien er å koble fra nettverkskabelen,
+  la boksen komme opp på Wi-Fi, og pare derfra.
+
+Det siste punktet kolliderer direkte med ethernet-anbefalingen i §2. Den
+kollisjonen er reell, og den må løses ved å velge — ikke ved å håpe.
+
+Det finnes tredjeparts-apper som slår på trådløs ADB igjen ved hver oppstart
+uten root. Jeg vil ikke bygge driften på en slik app: det er en ekstra
+avhengighet, uten garanti for at den overlever neste Android-versjon, på en
+enhet ingen har tilsyn med.
+
+### Android TV Remote v2: den som faktisk egner seg til drift
+
+Protokollen bak Googles egen fjernkontroll-app (port 6466/6467), tilgjengelig
+fra Python via `androidtvremote2` — det samme biblioteket Home Assistants
+`androidtv_remote`-integrasjon bruker, altså noe som er i bruk hos mange og
+blir vedlikeholdt.
+
+Egenskapene som betyr noe her, punkt for punkt mot ADBs svakheter:
+
+- **Krever ikke utviklermodus i det hele tatt.** Den snakker med Android TV
+  Remote Service, som er forhåndsinstallert.
+- **Paringen består.** Sertifikatene utveksles én gang; klienten kobler til
+  igjen av seg selv etter omstart, og faller tilbake til paringsflyten hvis
+  boksen skulle trekke tilbake tilliten.
+- **Fungerer over ethernet.**
+- **Vedvarende forbindelse**, altså lav responstid — det §7 trenger.
+- **Kan sende deep links**, ikke bare tastetrykk. Det er den ene evnen hele
+  modellen står og faller på (§4), og den er i behold.
 
 **Cast** via `pychromecast` gir volum og avspillingsstatus stabilt, men kan i
 praksis ikke starte vilkårlig innhold i en DRM-tjeneste, siden autentiseringen
@@ -126,17 +159,22 @@ ligger hos sender-appen.
 
 ### Anbefaling
 
-**Bruk ADB under utvikling, vurder å flytte driftsveien til Remote v2.**
+Dette er ikke lenger en åpen avveiing, slik jeg framstilte den tidligere:
 
-ADB er det klart beste verktøyet for å *utforske* enheten — `dumpsys` og
-`logcat` er hvordan vi i det hele tatt finner ut hvilke deep links som finnes
-(§4). Men å la utviklermodus stå på i årevis på en boks hjemme hos noen er både
-en liten angrepsflate og et skjørt punkt: den kan bli slått av av en oppdatering
-eller et fabrikkreset, og da må noen fysisk inn og slå den på igjen.
+**Remote v2 er driftsveien. ADB er et oppsett- og feilsøkingsverktøy.**
 
-Sluttbildet jeg vil foreslå: **Remote v2 som styringsvei, Cast for volum og
-status, ADB tilgjengelig for diagnostikk** når noe skal feilsøkes. Men det er en
-beslutning å ta etter at vi har målt — ikke nå.
+ADB er fortsatt uunnværlig — men til å *utforske* boksen, ikke til å styre den.
+`logcat` og `dumpsys` er den eneste måten å finne ut hvilke deep links som
+finnes (§4), og den jobben gjøres én gang, på Wi-Fi, i verkstedfasen. Deretter
+kobles boksen på kabel og driftes over Remote v2, og utviklermodus kan slås av.
+
+At utviklermodus da *ikke* står på permanent er en tilleggsgevinst: ADB åpent på
+nettverket er en kjent angrepsflate på Android TV-enheter, og en boks hjemme hos
+en person som ikke kan overvåke den er ikke stedet å la den stå åpen.
+
+Skal du feilsøke senere: bytt boksen midlertidig til Wi-Fi, par ADB på nytt,
+gjør det som skal gjøres, sett den tilbake på kabel. Tungvint, men det er en
+sjelden operasjon — og prisen for at den vanlige driften er robust.
 
 ---
 
