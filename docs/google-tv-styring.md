@@ -249,12 +249,43 @@ adb shell am start -a android.intent.action.VIEW -d "<adressen>"
 ### Sjekk om noen har gjort jobben før deg
 
 Home Assistant-miljøet vedlikeholder en dugnadsbasert oversikt over deep links
-for Android TV-apper. Slå opp der før du begynner å grave selv — kanskje
-adressene vi trenger allerede står der.
+for Android TV-apper, speilet blant annet i
+[actstorms/hassio-android-deeplink](https://github.com/actstorms/hassio-android-deeplink).
 
-Merk også `market://launch?id=<pakkenavn>`, som starter en app på pakkenavn
-alene. Det er ikke en innholds-deep-link, men det er et brukbart minimum for en
-tjeneste som ikke har noe bedre å tilby.
+Jeg har gått gjennom den. Statusen for våre tjenester:
+
+| Tjeneste | Pakkenavn | Deep link |
+|---|---|---|
+| Viaplay | — | ✅ `https://viaplay.no/movies` — står i lista |
+| NRK TV | ✅ `no.nrk.tv` | ⚠️ Ikke i lista. Se mønsteret under |
+| TV 2 Play | ⚠️ Ukjent | ⚠️ Ikke i lista |
+
+Ingen norske allmennkringkastere er dekket, så NRK og TV 2 må vi finne selv.
+Men lista gir oss to ting som gjør jobben lettere:
+
+**Mønsteret.** Oppføringene fordeler seg på to former: et eget skjema
+(`netflix://`, `discoveryplus://`) eller **appens egen nettadresse**
+(`https://www.disneyplus.com`, og for Viaplay `https://viaplay.no/movies`).
+Den siste formen er vanlig fordi apper registrerer sine egne nettadresser som
+app links. Det gjør `https://tv.nrk.no/direkte/nrk1` til en velbegrunnet
+hypotese å teste først i spiken — og hvis den holder, er kanalbytte innenfor
+NRK trivielt.
+
+**Pakkenavn uten ADB.** Det står i Play Store-adressen:
+`play.google.com/store/apps/details?id=no.nrk.tv`. Nyttig fordi
+`market://launch?id=<pakkenavn>` starter en app på pakkenavn alene — ikke en
+innholds-deep-link, men et brukbart minimum for en tjeneste uten noe bedre.
+
+En advarsel om TV 2: søk gir lett treff på den **danske** (`dk.tv2.tv2play`)
+og den **ungarske** (`tv2.play`) appen. Ingen av dem er den norske. Verifiser
+mot Play Store-adressen før noe hardkodes.
+
+### Tastenavn
+
+Biblioteket vi lander på (§3) bruker tastenavn **uten** `KEYCODE_`-prefiks:
+`DPAD_CENTER`, `HOME`, `BACK`, `POWER`, `TV`, `VOLUME_UP`, `MEDIA_PLAY_PAUSE`,
+`CHANNEL_UP` og så videre. Full liste i `TvKeys.txt` i
+[tronikos/androidtvremote2](https://github.com/tronikos/androidtvremote2).
 
 ### Hvis en tjeneste ikke har brukbar deep link
 
