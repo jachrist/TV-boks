@@ -72,6 +72,9 @@ Hvert punkt her fjerner en mulig felle for blind automatikk (§8). Verdt å gjø
   private data på en enhet i et annet hjem, og en ren startskjerm uten
   anbefalinger vi ikke styrer.
 - **Kablet nettverk**, og fast IP-reservasjon på ruteren for både boks og Pi.
+  Merk rekkefølgen: ADB-utforskingen i §4 må gjøres over **Wi-Fi**, fordi
+  trådløs feilsøking ikke lar seg slå på over ethernet (§3). Kjør derfor spiken
+  først, og legg kabelen etterpå.
 - **Slå av skjermsparer og ambient-modus**, eller sett dem så langt ut som
   mulig.
 - **Slå av automatisk avspilling av forhåndsvisninger** på startskjermen.
@@ -262,7 +265,7 @@ adb exec-out screencap -p > skjerm.png                          # for fjernfeils
 ```
 
 Grunnen til at dette betyr mer her enn i et vanlig prosjekt: **lydmodellen vår
-(§7 i hovednotatet) lover brukeren at boksen sier hva som skjer.** Uten
+(§6 i hovednotatet) lover brukeren at boksen sier hva som skjer.** Uten
 tilstandslesing er «NRK1» bare noe vi *håper* er sant fordi vi sendte en
 kommando. Med tilstandslesing er det noe vi vet.
 
@@ -274,8 +277,36 @@ Så: **si aldri kanalnavnet før tilstanden er bekreftet.** Sekvensen blir klikk
 («hørte deg») → lastetone → bekreftet kanalnavn, eller feilmelding. Ikke
 kanalnavn med én gang og håp.
 
-`screencap` er også verdt å merke seg for §11 i hovednotatet: en pårørende kan
+`screencap` er også verdt å merke seg for §10 i hovednotatet: en pårørende kan
 se hva som faktisk står på skjermen, uten å være i huset.
+
+### Men: alt dette krever ADB, som vi nettopp flyttet ut av driften
+
+Her er en konsekvens jeg ikke så da jeg skrev anbefalingen over. `dumpsys` er
+et ADB-verktøy. Er driftsveien Remote v2 (§3), har vi det ikke tilgjengelig til
+daglig.
+
+Remote v2 gir oss noe — blant annet hvilken app som er i forgrunnen, og
+volumnivå — men såvidt jeg forstår ikke *hva som spilles inne i appen*. Det er
+en svakere form for verifisering enn `dumpsys media_session`, og forskjellen
+treffer nøyaktig det løftet lydmodellen gir brukeren.
+
+Konkret: vi kan trolig bekrefte «vi er i NRK-appen», men ikke nødvendigvis «det
+er NRK1 som spiller». Tre måter å leve med det på:
+
+1. **Si bare det vi vet.** Les opp appnavnet der vi bare kan bekrefte appen —
+   «NRK» — og kanalnavnet der vi faktisk kan bekrefte kanalen. Ærlig, men gir
+   ujevn oppførsel mellom knappene, og det er i seg selv uheldig for en bruker
+   som bygger muskelminne.
+2. **Behold ADB i drift likevel**, og godta Wi-Fi framfor kabel. Det bytter én
+   svakhet mot en annen, og jeg tror nettverksstabilitet veier tyngst.
+3. **Verifiser at deep-linken traff riktig app, og stol på deep-linken for
+   resten.** En adresse som peker på NRK1, og som vi har bekreftet startet
+   NRK-appen, har ikke mange måter å ende opp på feil kanal på.
+
+Jeg heller mot **3, med 1 som sikkerhetsnett** ved feil. Men det bør avgjøres
+på målte data, ikke på antakelser om hva protokollen gir — derfor er det lagt
+inn som eget punkt i spiken (§10).
 
 ---
 
@@ -289,7 +320,7 @@ egen HDMI-inngang. Det betyr at «på»-knappen kan bli:
 vekk boksen  →  TV-en følger etter av seg selv
 ```
 
-CEC-risikoen fra §8 i hovednotatet blir dermed mindre, fordi vi flytter
+CEC-risikoen fra §7 i hovednotatet blir dermed mindre, fordi vi flytter
 CEC-ansvaret fra vår egen implementasjon over på en enhet der det er
 produsenttestet. Men merk at det bare gjelder når en delegert kilde er aktiv —
 og at det fortsatt må verifiseres på den faktiske TV-en. Det er den samme
@@ -316,7 +347,7 @@ To ting løser det, og begge bør inn fra starten:
 1. **Vedvarende forbindelse.** Remote v2 eller Cast holder forbindelsen åpen.
    Ingen prosessoppstart per hakk.
 2. **Slå sammen hakk.** Mikrokontrolleren sender allerede `ENC:+3` og ikke tre
-   separate meldinger (§6 i hovednotatet). Det gir oss én kommando i stedet
+   separate meldinger (§5 i hovednotatet). Det gir oss én kommando i stedet
    for tre.
 
 Sett et konkret mål og mål mot det: **under 100 ms fra vri til hørbar endring.**
@@ -353,13 +384,14 @@ Dette er det jeg tror er den viktigste konsekvensen, og den er god:
 **Hvis alle kanalene delegeres, trenger ikke Raspberry Pi-en lenger være en
 HDMI-kilde i det hele tatt.**
 
-Da faller følgende bort fra hovednotatet:
+Da faller følgende bort fra hovednotatet (numrene under viser til det, ikke
+til dette notatet):
 
 - Kiosk-modus og oppstart rett i en app (§13, punkt om kiosk)
-- mpv kontra Kodi (§5) — det er ikke lenger noe å velge mellom
-- HDMI-CEC fra Pi-en (§8) — boksen gjør det
-- Widevine-spiken (§3) — spørsmålet forsvinner, det er boksens problem nå
-- Hele token-håndteringen (§3) — appene eier den, og fornyer stille selv
+- mpv kontra Kodi (§4) — det er ikke lenger noe å velge mellom
+- HDMI-CEC fra Pi-en (§7) — boksen gjør det
+- Widevine-spiken (§2) — spørsmålet forsvinner, det er boksens problem nå
+- Hele token-håndteringen (§2) — appene eier den, og fornyer stille selv
 
 Pi-en blir en **hodeløs nettverkskontroller**: knapper inn, lyd ut på egen
 høyttaler, kommandoer ut på nettet. Ingen skjerm, ingen X, ingen nettleser,
@@ -385,24 +417,29 @@ avveiing, og motargumentet er ikke dumt.
 
 ## 10. Spike for uke 1
 
-Denne erstatter Widevine-spiken fra §3 i hovednotatet. Én dag, og den avgjør
+Denne erstatter Widevine-spiken fra §2 i hovednotatet. Én dag, og den avgjør
 om modellen holder.
 
 0. Kjør oppsettsjekklisten i §2 først. Flere av punktene der påvirker hva
    spiken måler.
-1. Slå på utviklermodus, `adb connect`, bekreft at forbindelsen overlever en
-   omstart av boksen.
+1. Slå på utviklermodus og par ADB **over Wi-Fi** (ikke ethernet — §3).
+   Forvent at paringen må gjøres på nytt etter hver omstart; det er normalt på
+   Android 14, og ikke et tegn på at noe er galt.
 2. Kartlegg pakkenavn for hver tjeneste (§4, teknikk 1).
 3. **For hver av de fire kanalene: finn og verifiser en deep link** (§4,
    teknikk 3). Dette er dagens viktigste punkt. Noter hvilke som lyktes.
 4. Mål tid fra kommando til bilde og lyd, per kanal, fra kald start.
-5. Bekreft at tilstandslesing skiller kanalene fra hverandre (§5) — altså at vi
-   *kan* verifisere før vi uttaler oss.
-6. Test at vekking av boksen slår på TV-en og velger riktig inngang (§6).
-7. Mål volumresponstid gjennom minst to kanaler (§7).
+5. **Par Remote v2, og kartlegg hvor mye tilstand den faktisk gir** (§5): ser
+   vi hvilken app som kjører, og ser vi noe om innholdet i den? Bekreft
+   samtidig at Remote v2 kan sende de samme deep-linkene som ADB gjorde i
+   punkt 3 — det er den kritiske evnen.
+6. Bekreft at Remote v2-paringen overlever omstart av både boks og Pi.
+7. Test at vekking av boksen slår på TV-en og velger riktig inngang (§6).
+8. Mål volumresponstid gjennom minst to kanaler (§7).
 
-**Beslutningsregelen:** fungerer punkt 3 for alle fire kanalene, er modellen
-god og resten er alminnelig arbeid. Fungerer den for to av fire, må vi snakke
+**Beslutningsregelen:** fungerer punkt 3 og 5 for alle fire kanalene — deep
+link funnet, *og* sendbar over Remote v2 — er modellen god og resten er
+alminnelig arbeid. Fungerer den for to av fire, må vi snakke
 om hvilke kanaler knappene faktisk skal være — det er en bedre samtale å ta nå
 enn etter at boksen er bygget.
 
@@ -414,8 +451,10 @@ enn etter at boksen er bygget.
    TV-en. Se §2 — anbefalingen er Google TV Streamer framfor en utgått
    Chromecast, i hovedsak på grunn av lagring og ethernet.
 2. **Beholder vi en egen NRK-vei på Pi-en?** Se §9 — jeg anbefaler nei.
-3. **Utviklermodus permanent på, eller Remote v2 i drift?** Kan besvares etter
-   spiken, men det er verdt å vite at spørsmålet finnes.
-4. **Hva skjer når nettet er nede?** Nå som alt innhold er nettavhengig, er
+3. ~~Utviklermodus permanent på, eller Remote v2 i drift?~~ **Avklart:**
+   Remote v2 i drift, ADB kun til oppsett og feilsøking (§3).
+4. **Hvor mye tilstand gir Remote v2?** Spørsmålet som erstatter det forrige,
+   se §5. Det avgjør hva boksen kan si til brukeren uten å risikere å ta feil.
+5. **Hva skjer når nettet er nede?** Nå som alt innhold er nettavhengig, er
    dette en tilstand som fortjener en egen talemelding og ikke bare en
    generisk feil.
