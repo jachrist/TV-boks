@@ -196,9 +196,7 @@ Kravene som følger:
 - **Stille helsesjekk, for eksempel hver natt.** Boksen fornyer eller
   prøvekjører hvert token mens ingen ser på.
 - **Varsle pårørende i forkant.** Nærmer et token seg utløp, eller feiler
-  helsesjekken, går det en melding ut *før* brukeren treffer veggen. Finnes det
-  en Homey Pro i huset, er et webhook-kall dit en nesten ferdig varslingsvei —
-  se §3 i [google-tv-styring.md](google-tv-styring.md). Da blir
+  helsesjekken, går det en melding ut *før* brukeren treffer veggen. Da blir
   utløp en vedlikeholdsoppgave i bakgrunnen i stedet for en feil i stua.
 - **Aldri vis en innloggingsskjerm på TV-en.** Den er en blindvei for en
   bruker som ikke kan se den.
